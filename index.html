@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SDOH in Clinical Notes</title>
+<style>:root{color-scheme:light;--bg:#fcfcfb;--card:#ffffff;--ink:#0b0b0b;--ink2:#52514e;--ink3:#8a8984;--rule:#e6e5e0;--grid:#efeee9;
+--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--q1:#cde2fb;--q7:#0d366b}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme=light])){color-scheme:dark;--bg:#1a1a19;--card:#222220;--ink:#f0efec;--ink2:#c3c2b7;--ink3:#8f8e86;--rule:#3a3936;--grid:#2c2b29;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--q1:#1f2c3d;--q7:#9ec5f4}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#1a1a19;--card:#222220;--ink:#f0efec;--ink2:#c3c2b7;--ink3:#8f8e86;--rule:#3a3936;--grid:#2c2b29;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--q1:#1f2c3d;--q7:#9ec5f4}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Source Sans 3","Segoe UI",system-ui,sans-serif}
+header{padding:32px max(5vw,16px) 8px;max-width:1240px;margin:auto}
+header a{color:var(--ink2);font-size:14px}
+h1{font:600 clamp(28px,4vw,40px)/1.1 "Source Serif 4",Georgia,serif;margin:10px 0 8px;text-wrap:balance}
+.lede{color:var(--ink2);max-width:70ch;margin:0}
+main{max-width:1240px;margin:auto;padding:8px max(5vw,16px) 48px;display:grid;gap:20px;grid-template-columns:repeat(12,minmax(0,1fr))}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px;grid-column:span 12}
+.half{grid-column:span 6}.third{grid-column:span 4}.quarter{grid-column:span 3}
+@media(max-width:860px){.half,.third,.quarter{grid-column:span 12}}
+h2{font:600 18px/1.3 "Source Serif 4",Georgia,serif;margin:0 0 4px}
+.sub{color:var(--ink2);font-size:14px;margin:0 0 12px}
+.kpi .v{font:600 clamp(28px,3.4vw,40px)/1.1 "Source Serif 4",Georgia,serif}
+.kpi .l{color:var(--ink2);font-size:14px}
+.fig{position:relative;min-height:300px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink2);margin-bottom:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:6px 8px;border-bottom:1px solid var(--rule);text-align:left}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto}
+.note{font-size:14px;color:var(--ink2)}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:6px 8px;border-radius:6px;opacity:0;transition:opacity .1s;z-index:9;max-width:260px}
+details summary{cursor:pointer;color:var(--ink2);font-size:14px}
+footer{max-width:1240px;margin:auto;padding:0 max(5vw,16px) 40px;color:var(--ink3);font-size:13px}
+</style></head><body>
+<header>
+<a href="https://github.com/mufidaha">Mufidah Abdulkadir, MSHI · Portfolio</a>
+<h1>Discharge notes rarely document social needs, even when chronic disease is everywhere</h1>
+<p class="lede">An NLP pipeline (Python, NLTK, scikit-learn) cleaned 327 MIMIC-III discharge summaries and counted terms for social determinants of health (SDOH) and leading chronic diseases. Only summary counts are shown here; no patient-level data is published.</p>
+</header>
+<main>
+<div class="card quarter kpi"><div class="v" id="k1"></div><div class="l">discharge summaries processed</div></div>
+<div class="card quarter kpi"><div class="v">13,887</div><div class="l">unique words after cleaning</div></div>
+<div class="card quarter kpi"><div class="v" id="k3"></div><div class="l">notes mention at least one chronic disease term</div></div>
+<div class="card quarter kpi"><div class="v" id="k4"></div><div class="l">notes mention housing or transportation</div></div>
+<section class="card half"><h2>Share of notes mentioning each term</h2><p class="sub">Percent of the 327 notes with at least one mention. Hover for total mentions.</p>
+<div class="legend"><span><i style="background:var(--s1)"></i>SDOH term</span><span><i style="background:var(--s2)"></i>Chronic disease term</span></div>
+<div id="terms"></div></section>
+<section class="card half"><h2>Which social terms appear alongside which diseases</h2><p class="sub">Number of notes mentioning both terms. Darker = more notes.</p>
+<div class="scroll" id="heat"></div></section>
+<section class="card"><h2>Data quality: why counts need context</h2>
+<p class="note" id="dq"></p></section>
+<section class="card"><h2>How I built it</h2>
+<p class="note">Loaded the notes with pandas, removed punctuation, lowercased, replaced line breaks, tokenized with NLTK, removed English stopwords and numbers, then counted words with pandas and a CountVectorizer document-term matrix (327 notes × 13,869 terms). The SDOH and disease word lists follow the CDC's leading causes of death and common SDOH domains. "Depression" was also searched in the notebook but its counts were not saved in the output, so it is left out here.</p>
+<details><summary>Data source</summary><p class="note">MIMIC-III NOTEEVENTS subset (discharge summaries) provided for MSHI509E Clinical Data Mining and Analytics, Morehouse School of Medicine. MIMIC data requires credentialed access through PhysioNet, so only aggregate counts appear on this page.</p></details>
+</section>
+</main>
+<footer>Built by Mufidah Abdulkadir · <a href="https://github.com/mufidaha/Natural-Language-Processing-of-Clinical-Notes-on-SDOH-and-Chronic-Diseases">Code on GitHub</a></footer>
+<div class="tip" id="tip"></div>
+<script>
+{
+const D={"n": 327, "anySdoh": 319, "anyDisease": 282, "both": 280, "terms": [{"term": "housing", "group": "sdoh", "mentions": 4, "patients": 4}, {"term": "nutrition", "group": "sdoh", "mentions": 51, "patients": 30}, {"term": "food", "group": "sdoh", "mentions": 33, "patients": 29}, {"term": "diet", "group": "sdoh", "mentions": 195, "patients": 116}, {"term": "exercise", "group": "sdoh", "mentions": 42, "patients": 33}, {"term": "physical", "group": "sdoh", "mentions": 495, "patients": 307}, {"term": "transportation", "group": "sdoh", "mentions": 2, "patients": 1}, {"term": "alcohol", "group": "sdoh", "mentions": 163, "patients": 122}, {"term": "drug", "group": "sdoh", "mentions": 132, "patients": 117}, {"term": "violence", "group": "sdoh", "mentions": 2, "patients": 2}, {"term": "access", "group": "sdoh", "mentions": 63, "patients": 45}, {"term": "coronary", "group": "disease", "mentions": 359, "patients": 118}, {"term": "stroke", "group": "disease", "mentions": 79, "patients": 42}, {"term": "pneumonia", "group": "disease", "mentions": 407, "patients": 122}, {"term": "pulmonary", "group": "disease", "mentions": 610, "patients": 185}, {"term": "cancer", "group": "disease", "mentions": 243, "patients": 114}, {"term": "diabetes", "group": "disease", "mentions": 182, "patients": 92}, {"term": "alzheimer", "group": "disease", "mentions": 1, "patients": 1}, {"term": "tuberculosis", "group": "disease", "mentions": 19, "patients": 9}, {"term": "cirrhosis", "group": "disease", "mentions": 72, "patients": 19}], "sdoh": ["housing", "nutrition", "food", "diet", "exercise", "physical", "transportation", "alcohol", "drug", "violence", "access"], "dis": ["coronary", "stroke", "pneumonia", "pulmonary", "cancer", "diabetes", "alzheimer", "tuberculosis", "cirrhosis"], "co": [[0, 0, 2, 3, 2, 2, 0, 1, 0], [15, 7, 17, 24, 10, 7, 0, 2, 1], [8, 6, 11, 15, 12, 6, 0, 0, 1], [43, 19, 35, 66, 51, 38, 0, 1, 11], [16, 6, 10, 19, 14, 10, 0, 2, 0], [112, 42, 117, 178, 112, 89, 1, 8, 19], [0, 0, 0, 1, 0, 1, 0, 0, 0], [47, 16, 49, 75, 50, 37, 0, 3, 15], [42, 14, 40, 69, 50, 35, 0, 3, 7], [2, 0, 0, 2, 2, 2, 0, 0, 0], [15, 7, 27, 29, 19, 16, 0, 2, 3]], "dist": {"housing": [4, 0, 0], "nutrition": [17, 12, 1], "food": [25, 4, 0], "diet": [67, 47, 2], "exercise": [27, 6, 0], "physical": [189, 114, 4], "transportation": [0, 1, 0], "alcohol": [103, 16, 3], "drug": [104, 13, 0], "violence": [2, 0, 0], "access": [30, 15, 0], "coronary": [50, 42, 26], "stroke": [29, 11, 2], "pneumonia": [38, 52, 32], "pulmonary": [64, 80, 41], "cancer": [59, 44, 11], "diabetes": [43, 43, 6], "alzheimer": [1, 0, 0], "tuberculosis": [5, 3, 1], "cirrhosis": [8, 3, 8]}};
+const $=id=>document.getElementById(id), tip=$('tip');
+const show=(e,h)=>{tip.innerHTML=h;tip.style.opacity=1;tip.style.left=Math.min(e.clientX+12,innerWidth-270)+'px';tip.style.top=(e.clientY+12)+'px'};
+const hide=()=>tip.style.opacity=0;
+const P=t=>D.terms.find(x=>x.term===t);
+$('k1').textContent=D.n; $('k3').textContent=Math.round(D.anyDisease/D.n*100)+'%';
+const hou=P('housing').patients+P('transportation').patients;
+$('k4').textContent=hou+' of '+D.n;
+const rows=D.terms.slice().sort((a,b)=>b.patients-a.patients);
+$('terms').innerHTML=rows.map(r=>{const p=r.patients/D.n*100;return `<div data-t="<b>${r.term}</b>: ${r.patients} notes (${p.toFixed(1)}%), ${r.mentions} total mentions" style="display:grid;grid-template-columns:110px minmax(0,1fr) 52px;gap:8px;align-items:center;margin:4px 0;font-size:14px"><span>${r.term}</span><span style="background:var(--grid);border-radius:4px;height:12px"><span style="display:block;height:12px;border-radius:4px;min-width:3px;background:${r.group==='sdoh'?'var(--s1)':'var(--s2)'};width:${p}%"></span></span><span style="text-align:right;font-variant-numeric:tabular-nums">${p.toFixed(1)}%</span></div>`}).join('');
+document.querySelectorAll('[data-t]').forEach(d=>{d.onmousemove=e=>show(e,d.dataset.t);d.onmouseleave=hide});
+const max=Math.max(...D.co.flat());
+let h='<table style="font-size:13px"><thead><tr><th></th>'+D.dis.map(d=>`<th class="n" style="writing-mode:vertical-rl;transform:rotate(180deg);height:90px">${d}</th>`).join('')+'</tr></thead><tbody>';
+D.sdoh.forEach((s,i)=>{h+=`<tr><td>${s}</td>`+D.co[i].map((v,j)=>{const a=v/max;return `<td class="n" data-c="${s} + ${D.dis[j]}: ${v} notes" style="background:color-mix(in oklab,var(--q7) ${Math.round(a*100)}%,var(--q1));color:${a>.45?'#fff':'var(--ink)'};border:2px solid var(--card)">${v}</td>`}).join('')+'</tr>'});
+$('heat').innerHTML=h+'</tbody></table>';
+document.querySelectorAll('[data-c]').forEach(d=>{d.onmousemove=e=>show(e,d.dataset.c);d.onmouseleave=hide});
+$('dq').textContent=`"Physical" appears in ${(P('physical').patients/D.n*100).toFixed(0)}% of notes, most likely from the standard "Physical Exam" section header rather than physical activity, so a raw keyword count overstates SDOH documentation. Words that clearly describe social needs are rare: housing appears in ${P('housing').patients} notes, transportation in ${P('transportation').patients}, and violence in ${P('violence').patients}. "Alcohol" and "drug" (each in about a third of notes) can also come from medication or substance-use history lines. A next step would add section detection and negation handling (for example "denies alcohol") before using these counts for analysis.`;
+}
+</script></body></html>

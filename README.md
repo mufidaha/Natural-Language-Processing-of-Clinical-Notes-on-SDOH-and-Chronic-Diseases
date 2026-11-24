@@ -1,37 +1,32 @@
 # NLP Analysis of Clinical Notes on SDOH and Chronic Diseases
 
-This project uses Natural Language Processing (NLP) techniques to analyze unstructured clinical discharge notes in order to identify patterns related to Social Determinants of Health (SDOH) and chronic diseases. For additional information on chronic diseases, visit CDC website, https://www.cdc.gov/chronicdisease/about/index.htm.
+**[📊 View the interactive dashboard](https://mufidaha.github.io/Natural-Language-Processing-of-Clinical-Notes-on-SDOH-and-Chronic-Diseases/)**
 
-In terms of data source for this project, the MIMIC-III (Medical Information Mart for Intensive Care III) modified table, NOTEEVENTS, will be used. For purposes of this project, table name, NOTEVENTS, has been changed to ClinicalNotes.
+## The question
+How often do hospital discharge notes document social determinants of health (SDOH) alongside chronic diseases?
 
-## 📘 Project Description
+## Key findings
+- **86% of notes** mention at least one leading chronic disease term (pulmonary 57%, pneumonia 37%, coronary 36%, cancer 35%).
+- Clear social-need terms are rare: **housing in 4 notes, transportation in 1, violence in 2** out of 327.
+- **Data quality catch:** "physical" appears in 94% of notes, most likely from the "Physical Exam" section header, so raw keyword counts overstate SDOH documentation. Section detection and negation handling are the next step.
 
-The notebook processes the `ClinicalNotes.csv` dataset, which includes discharge summaries containing variables:
-- `SUBJECT_ID`: Unique patient identifier
-- `HADM_ID`: Hospital admission ID
-- `TEXT`: Unstructured clinical notes
+## Data
+327 discharge summaries from a MIMIC-III NOTEEVENTS subset (course dataset). MIMIC requires credentialed access through [PhysioNet](https://mimic.mit.edu/docs/gettingstarted/), so the data is **not** included here; the dashboard shows only aggregate counts.
 
-Using Python NLP libraries, we clean and vectorize the notes and use a custom tool — `countingappliance` — to extract and count occurrences of key terms linked to SDOH and chronic health conditions.
+## Method
+1. Load notes with pandas
+2. Clean: remove punctuation, lowercase, replace line breaks
+3. Tokenize (NLTK), remove stopwords and numbers → 13,887 unique words
+4. Word frequencies (pandas `value_counts`, word cloud)
+5. Document-term matrix with scikit-learn `CountVectorizer` (327 × 13,869)
+6. A "counting appliance" that pulls SDOH and chronic-disease terms per note
 
-> ⚠️ The dataset is not included due to licensing restrictions. Please refer to [MIMIC-III Access Instructions](https://mimic.mit.edu/docs/gettingstarted/) to obtain the dataset.
+## Files
+- `MA_Natural_Language_Processing_of_Clinical_Notes_on_SDOH_and_Chronic_Diseases.ipynb` — notebook (Google Colab)
+- `index.html` — dashboard (served by GitHub Pages)
 
+## Tools
+Python · pandas · NLTK · scikit-learn · WordCloud · Google Colab
 
-## 🚀 Technologies Used
-
-- Python
-- Pandas
-- NLTK / spaCy
-- scikit-learn
-- Google Colab
-
-## 📈 Potential Extensions
-
-- Train ML models for prediction tasks
-- Use embeddings for semantic analysis
-- Analyze other free-text datasets
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
+## License
+MIT
